@@ -117,6 +117,33 @@ def FCFS(jarjend):
     keskm_ooteaeg = round(kogu_ooteaeg / len(jarjend), 2)
     return (valjund, keskm_ooteaeg)
 # näitab programmis käimasolevat protsessijada
+def SRTF(jarjend):
+    valjund = []
+    counter = 1
+    jarg = 0
+    kogu_ooteaeg = 0
+    jarjend.sort()
+    # paneb protsesse vajalikku järjekorda
+    for p in jarjend:
+        saabumine = p[0]
+        kestus = p[1]
+        if saabumine > (jarg):
+                # kui kahe protsessi vahel on "auk", siis jäetakse sinna delay näitamiseks õige pikkusega tühik
+                valjund.append([" ", saabumine-jarg])
+                valjund.append(["P" + str(counter), kestus])
+                jarg = saabumine + kestus
+                counter+=1
+        else:
+            # vaatab, kui kaua konkreetne protsess oma järge ootas
+            if saabumine < jarg:
+                kogu_ooteaeg += jarg - saabumine
+            # väljundlisti kirjutatakse protsess koos nime ja kestusega
+            valjund.append(["P" + str(counter), kestus])
+            jarg += kestus
+            counter += 1
+    # arvutan keskmise ooteaja
+    keskm_ooteaeg = round(kogu_ooteaeg / len(jarjend), 2)
+    return (valjund, keskm_ooteaeg)
 def massiiviTeavitaja(massiiv):
     text.delete(1.0, END)
     for jupp in massiiv:
