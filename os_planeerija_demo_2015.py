@@ -202,9 +202,9 @@ def RR3(jarjend):
         for i in range(len(jarjend)):
             if jarjend[i][0] <= t:
                 q.append(jarjend[i])
-                eemaldatavad.append(i)
+                eemaldatavad.append(jarjend[i])
         for i in eemaldatavad:
-            jarjend.pop(i)
+            jarjend.remove(i)
         eemaldatavad.clear()
         if len(q) == 0:
             t += 1
@@ -234,8 +234,8 @@ def RR3(jarjend):
             elif protsess[1] <= 3:
                 t += protsess[1]
                 for vanaProtsess in jarjend_orig:
-                    if protsess[2]==vanaProtsess[2]:
-                        kogu_ooteaeg+= t - vanaProtsess[0] - vanaProtsess[1]
+                    if protsess[2] == vanaProtsess[2]:
+                        kogu_ooteaeg += t - vanaProtsess[0] - vanaProtsess[1]
                 if len(valjund) == 0:
                     valjund.append([protsess[2], protsess[1]])
                     continue
@@ -243,7 +243,92 @@ def RR3(jarjend):
                     valjund[-1][1] += protsess[1]
                 else:
                     valjund.append([protsess[2], protsess[1]])
-        if len(jarjend)== 0 and len(q)==0:
+        if len(jarjend) == 0 and len(q) == 0:
+            valmis = True
+    keskmine_ooteaeg = kogu_ooteaeg / len(jarjend_orig)
+    return valjund, keskmine_ooteaeg
+
+
+def FCFS2L(jarjend):
+    t = 0
+    qHigh = deque()
+    qLow = deque()
+    valjund = []
+    eemaldatavad = []
+    valmis = False
+
+    kogu_ooteaeg = 0
+    for i in range(len(jarjend)):
+        jarjend[i].append("P" + str(i + 1))
+    jarjend_orig = copy.deepcopy(jarjend)
+    while not valmis:
+        for i in range(len(jarjend)):
+            if jarjend[i][0] <= t:
+                if jarjend[i][1] > 3:
+                    qLow.append(jarjend[i])
+                else:
+                    qHigh.append(jarjend[i])
+                eemaldatavad.append(jarjend[i])
+
+        for i in eemaldatavad:
+            jarjend.remove(i)
+        eemaldatavad.clear()
+        if len(qHigh) == 0 and len(qLow) == 0:
+            t += 1
+            if len(valjund) == 0:
+                valjund.append([" ", 1])
+                continue
+            if valjund[-1][0] == " ":
+                valjund[-1][1] += 1
+            else:
+                valjund.append([" ", 1])
+            continue
+        elif len(qHigh) > 0:
+            t += 1
+            qHigh[0][1] -= 1
+            if len(valjund) == 0:
+                valjund.append([qHigh[0][2], 1])
+                if qHigh[0][1] == 0:
+                    for vanaProtsess in jarjend_orig:
+                        if qHigh[0][2] == vanaProtsess[2]:
+                            kogu_ooteaeg += t - vanaProtsess[0] - vanaProtsess[1]
+                    qHigh.popleft()
+                continue
+            if valjund[-1][0] == qHigh[0][2]:
+                valjund[-1][1] += 1
+            else:
+                valjund.append([qHigh[0][2], 1])
+            if qHigh[0][1] == 0:
+                for vanaProtsess in jarjend_orig:
+                    if qHigh[0][2] == vanaProtsess[2]:
+                        kogu_ooteaeg += t - vanaProtsess[0] - vanaProtsess[1]
+                qHigh.popleft()
+            continue
+        elif len(qLow) > 0:
+            if qLow[0][1]<0:
+                break
+            t += 1
+            qLow[0][1] -= 1
+            if len(valjund) == 0:
+                valjund.append([qLow[0][2], 1])
+                if qLow[0][1] == 0:
+                    for vanaProtsess in jarjend_orig:
+                        if qLow[0][2] == vanaProtsess[2]:
+                            kogu_ooteaeg += t - vanaProtsess[0] - vanaProtsess[1]
+                            print(kogu_ooteaeg)
+                    qLow.popleft()
+                continue
+            if valjund[-1][0] == qLow[0][2]:
+                valjund[-1][1] += 1
+            else:
+                valjund.append([qLow[0][2], 1])
+            if qLow[0][1] == 0:
+                for vanaProtsess in jarjend_orig:
+                    print(qLow[0])
+                    if qLow[0][2] == vanaProtsess[2]:
+                        kogu_ooteaeg += t - vanaProtsess[0] - vanaProtsess[1]
+                qLow.popleft()
+        if len(jarjend) == 0 and len(qLow) == 0 and len(qHigh) == 0:
             valmis = True
     keskmine_ooteaeg = kogu_ooteaeg / len(jarjend_orig)
     return valjund, keskmine_ooteaeg
@@ -264,8 +349,8 @@ def kasuvalija(jarjend, algoritm):
         return SRTF(jarjend)
     elif algoritm == "RR3":
         return RR3(jarjend)
-    elif algoritm == "ML":
-        return ML(jarjend)
+    elif algoritm == "FCFS2L":
+        return FCFS2L(jarjend)
 
 
 def jooksuta_algoritmi(algoritm):
@@ -329,8 +414,8 @@ SRTF_nupp.place(x=190, y=190, height=25, width=80)
 RR3_nupp = ttk.Button(raam, text="RR3", command=lambda: jooksuta_algoritmi("RR3"))
 RR3_nupp.place(x=280, y=190, height=25, width=80)
 
-ML_nupp = ttk.Button(raam, text="ML", state=DISABLED, command=lambda: jooksuta_algoritmi("ML"))
-ML_nupp.place(x=370, y=190, height=25, width=80)
+FCFS2L_nupp = ttk.Button(raam, text="FCFS2L", command=lambda: jooksuta_algoritmi("FCFS2L"))
+FCFS2L_nupp.place(x=370, y=190, height=25, width=80)
 
 puhasta_nupp = ttk.Button(raam, text="Puhasta väljund", command=lambda: puhasta())
 puhasta_nupp.place(x=500, y=190, height=25, width=130)
