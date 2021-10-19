@@ -8,6 +8,8 @@ from tkinter import *
 import tkinter
 from tkinter import ttk
 from tkinter import messagebox
+from queue import Queue
+from collections import deque
 
 
 def puhasta():
@@ -61,6 +63,7 @@ def massiiviMeister():
             return massiiviks(predef1)
     else:
         return massiiviks(predef1)
+
 
 # näitealgoritmi realisatsioon
 # saab ette listi kaheelemendilistest lidtidest
@@ -123,7 +126,10 @@ def FCFS(jarjend):
     # arvutan keskmise ooteaja
     keskm_ooteaeg = round(kogu_ooteaeg / len(jarjend), 2)
     return (valjund, keskm_ooteaeg)
+
+
 # näitab programmis käimasolevat protsessijada
+
 def SRTF(jarjend):
     jarjend_orig = copy.deepcopy(jarjend)
     valjund = []
@@ -140,7 +146,7 @@ def SRTF(jarjend):
         counter += 1
     print(jarjend)
     while complete != n:
-        #print("lühimaindeks:" + str(lyhimaindeks) + " t: " + str(t))
+        # print("lühimaindeks:" + str(lyhimaindeks) + " t: " + str(t))
         for j in range(n):
             if (jarjend[j][0] <= t) and (jarjend[j][1] < minm) and jarjend[j][1] > 0:
                 minm = jarjend[j][1]
@@ -148,7 +154,7 @@ def SRTF(jarjend):
                 check = True
         if not check:
             t += 1
-            if len(valjund)==0:
+            if len(valjund) == 0:
                 valjund.append([" ", 1])
                 continue
             if valjund[-1][0] == " ":
@@ -158,13 +164,12 @@ def SRTF(jarjend):
             continue
         if check:
             t += 1
-            jarjend[lyhimaindeks][1] -=1
+            jarjend[lyhimaindeks][1] -= 1
             if jarjend[lyhimaindeks][1] == 0:
                 complete += 1
-                kogu_ooteaeg += t- jarjend_orig[lyhimaindeks][0] - jarjend_orig[lyhimaindeks][1]
-                minm =99999999
-
-            if len(valjund)==0:
+                kogu_ooteaeg += t - jarjend_orig[lyhimaindeks][0] - jarjend_orig[lyhimaindeks][1]
+                minm = 99999999
+            if len(valjund) == 0:
                 valjund.append([jarjend[lyhimaindeks][2], 1])
                 continue
             if valjund[-1][0] == jarjend[lyhimaindeks][2]:
@@ -175,7 +180,72 @@ def SRTF(jarjend):
         print("JÄRJEND:" + str(jarjend))
         print("VÄLJUND:" + str(valjund) + str(complete) + "LÜHIMA PIKKUS:" + str(minm))
         check = False
-    keskmine_ooteaeg = kogu_ooteaeg/len(jarjend_orig)
+    keskmine_ooteaeg = kogu_ooteaeg / len(jarjend_orig)
+    return valjund, keskmine_ooteaeg
+
+
+def RR3(jarjend):
+    t = 0
+    q = deque()
+    valjund = []
+    eemaldatavad = []
+    valmis = False
+
+    kogu_ooteaeg = 0
+    for i in range(len(jarjend)):
+        jarjend[i].append("P" + str(i + 1))
+    jarjend_orig = copy.deepcopy(jarjend)
+    while not valmis:
+        print("JÄRJEND:" + str(jarjend))
+        print("VÄLJUND:" + str(valjund))
+        print("QUEUE" + str(q))
+        for i in range(len(jarjend)):
+            if jarjend[i][0] <= t:
+                q.append(jarjend[i])
+                eemaldatavad.append(i)
+        for i in eemaldatavad:
+            jarjend.pop(i)
+        eemaldatavad.clear()
+        if len(q) == 0:
+            t += 1
+            if len(valjund) == 0:
+                valjund.append([" ", 1])
+                continue
+            if valjund[-1][0] == " ":
+                valjund[-1][1] += 1
+            else:
+                valjund.append([" ", 1])
+            continue
+        else:
+            protsess = q.popleft()
+            if protsess[1] > 3:
+                t += 3
+                protsess[1] -= 3
+                print(len(protsess))
+                if len(valjund) == 0:
+                    valjund.append([protsess[2], 3])
+                    q.append(protsess)
+                    continue
+                if valjund[-1][0] == protsess[2]:
+                    valjund[-1][1] += 3
+                else:
+                    valjund.append([protsess[2], 3])
+                q.append(protsess)
+            elif protsess[1] <= 3:
+                t += protsess[1]
+                for vanaProtsess in jarjend_orig:
+                    if protsess[2]==vanaProtsess[2]:
+                        kogu_ooteaeg+= t - vanaProtsess[0] - vanaProtsess[1]
+                if len(valjund) == 0:
+                    valjund.append([protsess[2], protsess[1]])
+                    continue
+                if valjund[-1][0] == protsess[2]:
+                    valjund[-1][1] += protsess[1]
+                else:
+                    valjund.append([protsess[2], protsess[1]])
+        if len(jarjend)== 0 and len(q)==0:
+            valmis = True
+    keskmine_ooteaeg = kogu_ooteaeg / len(jarjend_orig)
     return valjund, keskmine_ooteaeg
 
 
@@ -192,8 +262,8 @@ def kasuvalija(jarjend, algoritm):
         return FCFS(jarjend)
     elif algoritm == "SRTF":
         return SRTF(jarjend)
-    elif algoritm == "RR":
-        return RR(jarjend)
+    elif algoritm == "RR3":
+        return RR3(jarjend)
     elif algoritm == "ML":
         return ML(jarjend)
 
@@ -205,10 +275,10 @@ def jooksuta_algoritmi(algoritm):
     joonista(valjund)
     keskm_oot = tahvel.create_text(80, 40, text="Keskmine ooteaeg:  " + str(ooteaeg))
 
+
 predef1 = "0,5;6,9;6,5;15,10"
 predef2 = "0,2;0,4;12,4;15,5;21,10"
 predef3 = "5,6;6,9;11,3;12,7"
-
 
 # GUI
 raam = Tk()
@@ -218,10 +288,10 @@ raam.geometry("800x400")
 
 var = IntVar()
 var.set(1)
-Radiobutton(raam, text="Esimene", variable=var, value=1).place(x=10,y=40)
-Radiobutton(raam, text="Teine", variable=var, value=2).place(x=10,y=70)
-Radiobutton(raam, text="Kolmas", variable=var, value=3).place(x=10,y=100)
-Radiobutton(raam, text="Enda oma", variable=var, value=4).place(x=10,y=130)
+Radiobutton(raam, text="Esimene", variable=var, value=1).place(x=10, y=40)
+Radiobutton(raam, text="Teine", variable=var, value=2).place(x=10, y=70)
+Radiobutton(raam, text="Kolmas", variable=var, value=3).place(x=10, y=100)
+Radiobutton(raam, text="Enda oma", variable=var, value=4).place(x=10, y=130)
 
 silt_vali = ttk.Label(raam, text="Vali või sisesta järjend (kujul 1,10;4,2;12,3;13,2)")
 silt_vali.place(x=10, y=10)
@@ -256,8 +326,8 @@ FCFS_nupp.place(x=100, y=190, height=25, width=80)
 SRTF_nupp = ttk.Button(raam, text="SRTF", command=lambda: jooksuta_algoritmi("SRTF"))
 SRTF_nupp.place(x=190, y=190, height=25, width=80)
 
-RR_nupp = ttk.Button(raam, text="RR", state=DISABLED, command=lambda: jooksuta_algoritmi("RR"))
-RR_nupp.place(x=280, y=190, height=25, width=80)
+RR3_nupp = ttk.Button(raam, text="RR3", command=lambda: jooksuta_algoritmi("RR3"))
+RR3_nupp.place(x=280, y=190, height=25, width=80)
 
 ML_nupp = ttk.Button(raam, text="ML", state=DISABLED, command=lambda: jooksuta_algoritmi("ML"))
 ML_nupp.place(x=370, y=190, height=25, width=80)
