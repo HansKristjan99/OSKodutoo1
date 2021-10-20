@@ -8,7 +8,6 @@ from tkinter import *
 import tkinter
 from tkinter import ttk
 from tkinter import messagebox
-from queue import Queue
 from collections import deque
 
 
@@ -42,7 +41,6 @@ def massiiviks(input_jarjend):
         saabumine = int(hakkliha[0])
         kestus = int(hakkliha[1])
         valjund.append([saabumine, kestus])
-    print(valjund)
     return valjund
 
 
@@ -94,11 +92,10 @@ def LIFO(jarjend):
             counter += 1
     # arvutan keskmise ooteaja
     keskm_ooteaeg = round(kogu_ooteaeg / len(jarjend), 2)
-
-    print(valjund)
     return (valjund, keskm_ooteaeg)
-
-
+#first come first serve algoritmi interpretatsioon
+#võtab sisendiks protsesside listi kaheelemendilistest listidest
+#tagasitab paari väljundlistist ja keskmisest ooteajast
 def FCFS(jarjend):
     valjund = []
     counter = 1
@@ -127,16 +124,16 @@ def FCFS(jarjend):
     keskm_ooteaeg = round(kogu_ooteaeg / len(jarjend), 2)
     return (valjund, keskm_ooteaeg)
 
-
-# näitab programmis käimasolevat protsessijada
-
+#Väljutatõrjuv SJF - eelistab väiksema protsessoriajaga protsesse suurematele
+#võtab sisendiks protsesside listi kaheelemendilistest listidest
+#tagasitab paari väljundlistist ja keskmisest ooteajastt
 def SRTF(jarjend):
     jarjend_orig = copy.deepcopy(jarjend)
     valjund = []
     n = len(jarjend)
-    complete = 0
+    valmis = 0
     t = 0
-    minm = 999999999
+    suurTaisArv = 99999999
     lyhimaindeks = 0
     check = False
     counter = 1
@@ -144,12 +141,10 @@ def SRTF(jarjend):
     for i in (jarjend):
         i.append("P" + str(counter))
         counter += 1
-    print(jarjend)
-    while complete != n:
-        # print("lühimaindeks:" + str(lyhimaindeks) + " t: " + str(t))
+    while valmis != n:
         for j in range(n):
-            if (jarjend[j][0] <= t) and (jarjend[j][1] < minm) and jarjend[j][1] > 0:
-                minm = jarjend[j][1]
+            if (jarjend[j][0] <= t) and (jarjend[j][1] < suurTaisArv) and jarjend[j][1] > 0:
+                suurTaisArv = jarjend[j][1]
                 lyhimaindeks = j
                 check = True
         if not check:
@@ -166,9 +161,9 @@ def SRTF(jarjend):
             t += 1
             jarjend[lyhimaindeks][1] -= 1
             if jarjend[lyhimaindeks][1] == 0:
-                complete += 1
+                valmis += 1
                 kogu_ooteaeg += t - jarjend_orig[lyhimaindeks][0] - jarjend_orig[lyhimaindeks][1]
-                minm = 99999999
+                suurTaisArv = 99999999
             if len(valjund) == 0:
                 valjund.append([jarjend[lyhimaindeks][2], 1])
                 continue
@@ -176,35 +171,31 @@ def SRTF(jarjend):
                 valjund[-1][1] += 1
             else:
                 valjund.append([jarjend[lyhimaindeks][2], 1])
-
-        print("JÄRJEND:" + str(jarjend))
-        print("VÄLJUND:" + str(valjund) + str(complete) + "LÜHIMA PIKKUS:" + str(minm))
         check = False
     keskmine_ooteaeg = kogu_ooteaeg / len(jarjend_orig)
     return valjund, keskmine_ooteaeg
 
-
+#round robin ajakvandiga 3
+#võtab sisendiks protsesside listi kaheelemendilistest listidest
+#tagasitab paari väljundlistist ja keskmisest ooteajast
 def RR3(jarjend):
     t = 0
     q = deque()
     valjund = []
     eemaldatavad = []
     valmis = False
-
     kogu_ooteaeg = 0
     for i in range(len(jarjend)):
         jarjend[i].append("P" + str(i + 1))
     jarjend_orig = copy.deepcopy(jarjend)
     while not valmis:
-        print("JÄRJEND:" + str(jarjend))
-        print("VÄLJUND:" + str(valjund))
-        print("QUEUE" + str(q))
         for i in range(len(jarjend)):
             if jarjend[i][0] <= t:
-                q.append(jarjend[i])
                 eemaldatavad.append(jarjend[i])
         for i in eemaldatavad:
             jarjend.remove(i)
+        eemaldatavad.reverse()
+        q.extendleft(eemaldatavad)
         eemaldatavad.clear()
         if len(q) == 0:
             t += 1
@@ -221,7 +212,6 @@ def RR3(jarjend):
             if protsess[1] > 3:
                 t += 3
                 protsess[1] -= 3
-                print(len(protsess))
                 if len(valjund) == 0:
                     valjund.append([protsess[2], 3])
                     q.append(protsess)
@@ -247,8 +237,9 @@ def RR3(jarjend):
             valmis = True
     keskmine_ooteaeg = kogu_ooteaeg / len(jarjend_orig)
     return valjund, keskmine_ooteaeg
-
-
+#Kahe prioriteediga FCFS - kaks eraldi järjekorda qHigh ja qLow - tegutsevad vastavalt väikeste ja suurte protsessoriaegadega
+#võtab sisendiks protsesside listi kaheelemendilistest listidest
+#tagasitab paari väljundlistist ja keskmisest ooteajast
 def FCFS2L(jarjend):
     t = 0
     qHigh = deque()
@@ -256,12 +247,12 @@ def FCFS2L(jarjend):
     valjund = []
     eemaldatavad = []
     valmis = False
-
     kogu_ooteaeg = 0
     for i in range(len(jarjend)):
         jarjend[i].append("P" + str(i + 1))
     jarjend_orig = copy.deepcopy(jarjend)
     while not valmis:
+        #lisame vastavalt pikkustele käimasolevad protsessid qhigh või qlow järjekorda
         for i in range(len(jarjend)):
             if jarjend[i][0] <= t:
                 if jarjend[i][1] > 3:
@@ -269,10 +260,11 @@ def FCFS2L(jarjend):
                 else:
                     qHigh.append(jarjend[i])
                 eemaldatavad.append(jarjend[i])
-
+        #eemaldame käimasolevad protsessid järjekorrast.
         for i in eemaldatavad:
             jarjend.remove(i)
         eemaldatavad.clear()
+        #kui mõlemad on tühjad, ootame ühe sekundi
         if len(qHigh) == 0 and len(qLow) == 0:
             t += 1
             if len(valjund) == 0:
@@ -283,6 +275,9 @@ def FCFS2L(jarjend):
             else:
                 valjund.append([" ", 1])
             continue
+        #tegutseme enne kõrge prioriteediga järjekorraga
+        #lähme tsükli päisesse tagasi, kui seal leidus protsess
+        #lisame väljundisse ühe ajaühiku vastavat protsessi
         elif len(qHigh) > 0:
             t += 1
             qHigh[0][1] -= 1
@@ -304,6 +299,8 @@ def FCFS2L(jarjend):
                         kogu_ooteaeg += t - vanaProtsess[0] - vanaProtsess[1]
                 qHigh.popleft()
             continue
+        #Kui siia jõuame, siis pole kõrge prioriteediga protsesse
+        #lisame väljundisse ühe ajaühiku järjekorra esimest protsessi
         elif len(qLow) > 0:
             if qLow[0][1]<0:
                 break
@@ -315,7 +312,6 @@ def FCFS2L(jarjend):
                     for vanaProtsess in jarjend_orig:
                         if qLow[0][2] == vanaProtsess[2]:
                             kogu_ooteaeg += t - vanaProtsess[0] - vanaProtsess[1]
-                            print(kogu_ooteaeg)
                     qLow.popleft()
                 continue
             if valjund[-1][0] == qLow[0][2]:
@@ -324,7 +320,6 @@ def FCFS2L(jarjend):
                 valjund.append([qLow[0][2], 1])
             if qLow[0][1] == 0:
                 for vanaProtsess in jarjend_orig:
-                    print(qLow[0])
                     if qLow[0][2] == vanaProtsess[2]:
                         kogu_ooteaeg += t - vanaProtsess[0] - vanaProtsess[1]
                 qLow.popleft()
@@ -414,7 +409,7 @@ SRTF_nupp.place(x=190, y=190, height=25, width=80)
 RR3_nupp = ttk.Button(raam, text="RR3", command=lambda: jooksuta_algoritmi("RR3"))
 RR3_nupp.place(x=280, y=190, height=25, width=80)
 
-FCFS2L_nupp = ttk.Button(raam, text="FCFS2L", command=lambda: jooksuta_algoritmi("FCFS2L"))
+FCFS2L_nupp = ttk.Button(raam, text="2x FCFS", command=lambda: jooksuta_algoritmi("FCFS2L"))
 FCFS2L_nupp.place(x=370, y=190, height=25, width=80)
 
 puhasta_nupp = ttk.Button(raam, text="Puhasta väljund", command=lambda: puhasta())
